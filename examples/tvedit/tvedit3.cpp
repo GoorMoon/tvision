@@ -40,10 +40,10 @@ TMenuBar *TEditorApp::initMenuBar( TRect r )
         *new TMenuItem( "~O~pen", cmOpen, kbF3, hcNoContext, "F3" ) +
         *new TMenuItem( "~N~ew", cmNew, kbCtrlN, hcNoContext, "Ctrl-N" ) +
         *new TMenuItem( "~S~ave", cmSave, kbF2, hcNoContext, "F2" ) +
-        *new TMenuItem( "S~a~ve as...", cmSaveAs, kbNoKey ) +
+        *new TMenuItem( "S~a~ve as...", cmSaveAs, (TKey)kbNoKey ) +
              newLine() +
-        *new TMenuItem( "~C~hange dir...", cmChangeDrct, kbNoKey ) +
-        *new TMenuItem( "~D~OS shell", cmDosShell, kbNoKey ) +
+        *new TMenuItem( "~C~hange dir...", cmChangeDrct, (TKey)kbNoKey ) +
+        *new TMenuItem( "~D~OS shell", cmDosShell, (TKey)kbNoKey ) +
         *new TMenuItem( "E~x~it", cmQuit, kbCtrlQ, hcNoContext, "Ctrl-Q" );
 
       TSubMenu& sub2 = *new TSubMenu( "~E~dit", kbAltE ) +
@@ -56,15 +56,15 @@ TMenuBar *TEditorApp::initMenuBar( TRect r )
         *new TMenuItem( "~C~lear", cmClear, kbCtrlDel, hcNoContext, "Ctrl-Del" );
 
       TSubMenu& sub3 = *new TSubMenu( "~S~earch", kbAltS ) +
-        *new TMenuItem( "~F~ind...", cmFind, kbNoKey ) +
-        *new TMenuItem( "~R~eplace...", cmReplace, kbNoKey ) +
-        *new TMenuItem( "~S~earch again", cmSearchAgain, kbNoKey );
+        *new TMenuItem( "~F~ind...", cmFind, (TKey)kbNoKey ) +
+        *new TMenuItem( "~R~eplace...", cmReplace, (TKey)kbNoKey ) +
+        *new TMenuItem( "~S~earch again", cmSearchAgain, (TKey)kbNoKey );
 
       TSubMenu& sub4 = *new TSubMenu( "~W~indows", kbAltW ) +
         *new TMenuItem( "~S~ize/move",cmResize, kbCtrlF5, hcNoContext, "Ctrl-F5" ) +
         *new TMenuItem( "~Z~oom", cmZoom, kbF5, hcNoContext, "F5" ) +
-        *new TMenuItem( "~T~ile", cmTile, kbNoKey ) +
-        *new TMenuItem( "C~a~scade", cmCascade, kbNoKey ) +
+        *new TMenuItem( "~T~ile", cmTile, (TKey)kbNoKey ) +
+        *new TMenuItem( "C~a~scade", cmCascade, (TKey)kbNoKey ) +
         *new TMenuItem( "~N~ext", cmNext, kbF6, hcNoContext, "F6" ) +
         *new TMenuItem( "~P~revious", cmPrev, kbShiftF6, hcNoContext, "Shift-F6" ) +
         *new TMenuItem( "~C~lose", cmClose, kbCtrlW, hcNoContext, "Ctrl+W" );

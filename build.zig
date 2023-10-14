@@ -17,17 +17,14 @@ pub fn build(b: *Build) !void {
     var tvision_art = std.Build.Step.InstallArtifact.create(tvision_step.owner, tvision, .{});
     tvision_step.dependOn(&tvision_art.step);
 
-    // Build Hello Library
-    var hello = try addExampleHello(b, .{ .optimize = optimize, .target = target });
-    hello.step.dependOn(&tvision.step);
-    hello.linkLibrary(tvision);
-
-    var hello_step = b.step("hello", "build hello demo");
-    var hello_art = std.Build.Step.InstallArtifact.create(hello_step.owner, hello, .{});
-    hello_step.dependOn(&hello_art.step);
-
+    //* -------------- */
     //* build examples */
     //* -------------- */
+
+    // hello
+    var hello = try addExampleHello(b, .{ .optimize = optimize, .target = target });
+    hello.linkLibrary(tvision);
+
     // mmenu
     var mmenu = try addExampleMMenu(b, .{ .optimize = optimize, .target = target });
     mmenu.linkLibrary(tvision);
@@ -57,18 +54,21 @@ pub fn build(b: *Build) !void {
     tvhc.linkLibrary(tvision);
 
     var examples_step = b.step("examples", "build tvision examples");
+    var hello_art = std.Build.Step.InstallArtifact.create(examples_step.owner, hello, .{});
     var mmenu_art = std.Build.Step.InstallArtifact.create(examples_step.owner, mmenu, .{});
     var tvedit_art = std.Build.Step.InstallArtifact.create(examples_step.owner, tvedit, .{});
-    _ = tvedit_art;
     var palette_art = std.Build.Step.InstallArtifact.create(examples_step.owner, palette, .{});
     var tvdemo_art = std.Build.Step.InstallArtifact.create(examples_step.owner, tvdemo, .{});
-    _ = tvdemo_art;
     var tvdir_art = std.Build.Step.InstallArtifact.create(examples_step.owner, tvdir, .{});
     var tvforms_art = std.Build.Step.InstallArtifact.create(examples_step.owner, tvforms, .{});
-    _ = tvforms_art;
     var tvhc_art = std.Build.Step.InstallArtifact.create(examples_step.owner, tvhc, .{});
+
+    _ = tvforms_art;
+    _ = tvdemo_art;
+    _ = tvedit_art;
     _ = tvhc_art;
 
+    examples_step.dependOn(&hello_art.step);
     examples_step.dependOn(&mmenu_art.step);
     // examples_step.dependOn(&tvedit_art.step);
     // examples_step.dependOn(&tvdemo_art.step);

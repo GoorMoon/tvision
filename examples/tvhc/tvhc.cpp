@@ -643,7 +643,7 @@ TTopicDefinition *topicHeader( const char *line )
     if (strcmp(w, commandChar) != 0)
         return(0);
     strnzcpy(w, getWord(line, i), sizeof(w));
-    strupr(w);
+    _strupr(w);
     if (strcmp(w, "TOPIC") == 0)
         return topicDefinitionList(line, i);
     else

@@ -85,7 +85,7 @@ int TDataCollection::compare( void *key1, void *key2 )
 {
 
     if (keyType == stringKey)
-        return stricmp((char*)key1, (char*) key2);
+        return _stricmp((char*)key1, (char*) key2);
     else
         {
         if (!key1 || !key2 || *(int32_t *)key1 < *(int32_t *)key2)

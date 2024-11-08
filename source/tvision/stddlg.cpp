@@ -104,7 +104,7 @@ TSortedListBox::TSortedListBox( const TRect& bounds,
 
 static Boolean equal( const char *s1, const char *s2, ushort count)
 {
-    return Boolean( strnicmp( s1, s2, count ) == 0 );
+    return Boolean( _strnicmp( s1, s2, count ) == 0 );
 }
 
 void TSortedListBox::handleEvent(TEvent& event)
@@ -242,24 +242,24 @@ void TFileInfoPane::draw()
         {
 
         char buf[32];
-        ltoa( file_block.size, buf, 10 );
+        _ltoa( file_block.size, buf, 10 );
         b.moveStr( size.x - 38, buf, color );
 
         time = (struct ftime *) &file_block.time;
         b.moveStr( size.x - 22, months[time->ft_month], color );
 
         if( time->ft_day >= 10 )
-            itoa( time->ft_day, buf, 10 );
+            _itoa( time->ft_day, buf, 10 );
         else
             {
             buf[0] = '0';
-            itoa( time->ft_day, buf+1, 10 );
+            _itoa( time->ft_day, buf+1, 10 );
             }
         b.moveStr( size.x - 18, buf, color );
 
         b.putChar( size.x - 16, ',' );
 
-        itoa( time->ft_year+1980, buf, 10 );
+        _itoa( time->ft_year+1980, buf, 10 );
         b.moveStr( size.x - 15, buf, color );
 
         PM = Boolean(time->ft_hour >= 12 );
@@ -269,21 +269,21 @@ void TFileInfoPane::draw()
             time->ft_hour = 12;
 
         if( time->ft_hour >= 10 )
-            itoa( time->ft_hour, buf, 10 );
+            _itoa( time->ft_hour, buf, 10 );
         else
             {
             buf[0] = '0';
-            itoa( time->ft_hour, buf+1, 10 );
+            _itoa( time->ft_hour, buf+1, 10 );
             }
         b.moveStr( size.x - 9, buf, color );
         b.putChar( size.x - 7, ':' );
 
         if( time->ft_min >= 10 )
-            itoa( time->ft_min, buf, 10 );
+            _itoa( time->ft_min, buf, 10 );
         else
             {
             buf[0] = '0';
-            itoa( time->ft_min, buf+1, 10 );
+            _itoa( time->ft_min, buf+1, 10 );
             }
         b.moveStr( size.x - 6, buf, color );
 

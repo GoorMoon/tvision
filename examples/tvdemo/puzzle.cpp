@@ -122,7 +122,7 @@ void TPuzzleView::draw()
         if(i == 1)
             buf.moveStr(13, "Move", colorBack);
         if(i == 2)
-            buf.moveStr(14, itoa(moves, tmp, 10), colorBack);
+            buf.moveStr(14, _itoa(moves, tmp, 10), colorBack);
         for(short j = 0; j <= 3; j++)
             {
             strcpy(tmp, "   ");

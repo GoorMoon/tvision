@@ -129,7 +129,7 @@ void TNumInputLine::getData( void *rec )
 
 void TNumInputLine::setData( void *rec )
 {
-    ltoa(*(int32_t *)rec, data, 10);
+    _ltoa(*(int32_t *)rec, data, 10);
     selectAll(True);
 }
 

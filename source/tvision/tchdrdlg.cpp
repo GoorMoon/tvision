@@ -41,6 +41,7 @@
 #include <strstrea.h>
 #endif
 
+
 TChDirDialog::TChDirDialog( ushort opts, ushort histId ) noexcept :
     TWindowInit( &TChDirDialog::initFrame ),
     TDialog( TRect( 16, 2, 64, 20 ), changeDirTitle )
@@ -165,7 +166,7 @@ static int changeDir( const char *path )
 {
     if( path[1] == ':' )
         setdisk( toupper(path[0]) - 'A' );
-    return chdir( path );
+    return _chdir( path );
 }
 
 Boolean TChDirDialog::valid( ushort command )

@@ -142,8 +142,8 @@ void TFormApp::openListDialog()
             d->getFileName(fileName);
             if (!fileExists(fileName))
                 {
-                strcpy(errorMsg, "Cannot find file ");
-                strcat(errorMsg, fileName);
+                strcpy_s(errorMsg, "Cannot find file ");
+                strcat_s(errorMsg, fileName);
                 messageBox(errorMsg, mfError | mfOKButton);
                 }
             else
@@ -177,7 +177,7 @@ void TFormApp::handleEvent(TEvent& event)
                 changeDir();
                 break;
             case cmAboutBox:
-                strcpy(aboutMsg, "\x3Turbo Vision C++ 2.0\n\n\x3Turbo Vision Forms Demo");
+                strcpy_s(aboutMsg, "\x3Turbo Vision C++ 2.0\n\n\x3Turbo Vision Forms Demo");
                 messageBox(aboutMsg, mfInformation | mfOKButton);
                 break;
             case cmVideoMode:
@@ -200,13 +200,13 @@ TMenuBar *TFormApp::initMenuBar( TRect r)
       *new TSubMenu( "~\xF0~", hcNoContext ) +
         *new TMenuItem( "~V~ideo mode", cmVideoMode, kbNoKey, hcNoContext, "" ) +
              newLine() +
-        *new TMenuItem( "~A~bout...", cmAboutBox, kbNoKey, hcNoContext ) +
+        *new TMenuItem( "~A~bout...", cmAboutBox, kbNoKey, hcNoContext,"" ) +
       *new TSubMenu( "~F~ile", hcNoContext) +
         *new TMenuItem( "~O~pen...", cmListOpen, kbF3, hcNoContext, "F3" ) +
         *new TMenuItem( "~S~ave", cmListSave, kbF2, hcNoContext, "F2" ) +
              newLine() +
-        *new TMenuItem( "~C~hange directory...", cmChgDir, kbNoKey, hcNoContext ) +
-        *new TMenuItem( "~D~OS shell", cmDosShell, kbNoKey, hcNoContext ) +
+        *new TMenuItem( "~C~hange directory...", cmChgDir, kbNoKey, hcNoContext,"" ) +
+        *new TMenuItem( "~D~OS shell", cmDosShell, kbNoKey, hcNoContext,"" ) +
         *new TMenuItem( "E~x~it", cmQuit, kbAltX, hcNoContext, "Alt-X" ) +
       *new TSubMenu( "~W~indow", hcNoContext ) +
         *new TMenuItem( "~M~ove", cmResize, kbCtrlF5, hcNoContext, "Cntl-F5") +

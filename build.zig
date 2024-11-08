@@ -1,5 +1,5 @@
 const std = @import("std");
-const Build = std.build;
+const Build = std.Build;
 
 pub fn build(b: *Build) !void {
     const prefered_target = std.zig.CrossTarget{
@@ -8,14 +8,16 @@ pub fn build(b: *Build) !void {
         .os_tag = .windows,
     };
 
-    var optimize = b.standardOptimizeOption(.{});
-    var target = b.standardTargetOptions(.{ .default_target = prefered_target });
+    const optimize = b.standardOptimizeOption(.{});
+    const target = b.standardTargetOptions(.{ .default_target = prefered_target });
 
     // Build the tvision library
-    var tvision = try addTVisionLibraryStep(b, .{ .optimize = optimize, .target = target });
+    const tvision = try addTVisionLibraryStep(b, .{ .optimize = optimize, .target = target });
+
     var tvision_step = b.step("tvision", "build tvision library");
-    var tvision_art = std.Build.Step.InstallArtifact.create(tvision_step.owner, tvision, .{});
-    tvision_step.dependOn(&tvision_art.step);
+    tvision_step.dependOn(&tvision.step);
+
+    b.installArtifact(tvision);
 
     //* -------------- */
     //* build examples */
@@ -54,35 +56,30 @@ pub fn build(b: *Build) !void {
     tvhc.linkLibrary(tvision);
 
     var examples_step = b.step("examples", "build tvision examples");
-    var hello_art = std.Build.Step.InstallArtifact.create(examples_step.owner, hello, .{});
-    var mmenu_art = std.Build.Step.InstallArtifact.create(examples_step.owner, mmenu, .{});
-    var tvedit_art = std.Build.Step.InstallArtifact.create(examples_step.owner, tvedit, .{});
-    var palette_art = std.Build.Step.InstallArtifact.create(examples_step.owner, palette, .{});
-    var tvdemo_art = std.Build.Step.InstallArtifact.create(examples_step.owner, tvdemo, .{});
-    var tvdir_art = std.Build.Step.InstallArtifact.create(examples_step.owner, tvdir, .{});
-    var tvforms_art = std.Build.Step.InstallArtifact.create(examples_step.owner, tvforms, .{});
-    var tvhc_art = std.Build.Step.InstallArtifact.create(examples_step.owner, tvhc, .{});
+    examples_step.dependOn(&hello.step);
+    examples_step.dependOn(&mmenu.step);
+    examples_step.dependOn(&tvedit.step);
+    examples_step.dependOn(&tvdemo.step);
+    examples_step.dependOn(&tvforms.step);
+    examples_step.dependOn(&tvhc.step);
+    examples_step.dependOn(&palette.step);
+    examples_step.dependOn(&tvdir.step);
 
-    _ = tvforms_art;
-    _ = tvdemo_art;
-    _ = tvedit_art;
-    _ = tvhc_art;
+    examples_step.owner.installArtifact(hello);
+    examples_step.owner.installArtifact(mmenu);
+    examples_step.owner.installArtifact(palette);
+    examples_step.owner.installArtifact(tvdir);
+    examples_step.owner.installArtifact(tvedit);
+    examples_step.owner.installArtifact(tvdemo);
+    examples_step.owner.installArtifact(tvforms);
+    examples_step.owner.installArtifact(tvhc);
 
-    examples_step.dependOn(&hello_art.step);
-    examples_step.dependOn(&mmenu_art.step);
-    // examples_step.dependOn(&tvedit_art.step);
-    // examples_step.dependOn(&tvdemo_art.step);
-    // examples_step.dependOn(&tvforms_art.step);
-    // examples_step.dependOn(&tvhc_art.step);
-    examples_step.dependOn(&palette_art.step);
-    examples_step.dependOn(&tvdir_art.step);
-
-    b.default_step.dependOn(tvision_step);
+    examples_step.dependOn(b.getInstallStep());
 }
 
 fn addTVisionLibraryStep(b: *Build, options: struct {
     optimize: std.builtin.OptimizeMode,
-    target: std.zig.CrossTarget,
+    target: std.Build.ResolvedTarget,
 }) !*Build.Step.Compile {
 
     // build tvision library
@@ -92,20 +89,20 @@ fn addTVisionLibraryStep(b: *Build, options: struct {
         .target = options.target,
     });
 
-    tvision.addIncludePath(.{ .path = "include" });
-    tvision.addIncludePath(.{ .path = "include/tvision" });
-    tvision.addIncludePath(.{ .path = "include/tvision/compat/borland" });
+    tvision.addIncludePath(b.path("include"));
+    tvision.addIncludePath(b.path("include/tvision"));
+    tvision.addIncludePath(b.path("include/tvision/compat/borland"));
     tvision.linkLibC();
 
     var sources = std.ArrayList([]const u8).init(b.allocator);
 
-    const source_dir = try std.fs.cwd().openIterableDir("source", .{});
+    const source_dir = try std.fs.cwd().openDir("source", .{ .iterate = true });
     var sd_iter = try source_dir.walk(b.allocator);
     defer sd_iter.deinit();
 
     while (try sd_iter.next()) |entry| {
         if (entry.kind == .file and std.mem.endsWith(u8, entry.basename, ".cpp") and !std.mem.eql(u8, entry.basename, "geninc.cpp")) {
-            var str = b.fmt("source/{s}", .{entry.path});
+            const str = b.fmt("source/{s}", .{entry.path});
             try sources.append(str);
         }
     }
@@ -123,7 +120,7 @@ fn addTVisionLibraryStep(b: *Build, options: struct {
 
 fn addExampleHello(b: *Build, options: struct {
     optimize: std.builtin.OptimizeMode,
-    target: std.zig.CrossTarget,
+    target: std.Build.ResolvedTarget,
 }) !*Build.Step.Compile {
     var hello = b.addExecutable(.{
         .name = "hello",
@@ -131,14 +128,14 @@ fn addExampleHello(b: *Build, options: struct {
         .target = options.target,
     });
     hello.addCSourceFile(.{
-        .file = .{ .path = "hello.cpp" },
+        .file = b.path("hello.cpp"),
         .flags = &.{
             "-std=c++14",
         },
     });
-    hello.addIncludePath(.{ .path = "include" });
+    hello.addIncludePath(b.path("include"));
     hello.linkLibC();
-    if (options.target.os_tag.? == .windows) {
+    if (options.target.result.os.tag == .windows) {
         hello.linkSystemLibrary("user32");
     }
 
@@ -147,7 +144,7 @@ fn addExampleHello(b: *Build, options: struct {
 
 fn addExampleMMenu(b: *Build, options: struct {
     optimize: std.builtin.OptimizeMode,
-    target: std.zig.CrossTarget,
+    target: std.Build.ResolvedTarget,
 }) !*Build.Step.Compile {
     var mmenu = b.addExecutable(.{
         .name = "mmenu",
@@ -163,17 +160,17 @@ fn addExampleMMenu(b: *Build, options: struct {
             "-std=c++14",
         },
     });
-    mmenu.addIncludePath(.{ .path = "include" });
-    mmenu.addIncludePath(.{ .path = "include/tvision" });
+    mmenu.addIncludePath(b.path("include"));
+    mmenu.addIncludePath(b.path("include/tvision"));
     mmenu.linkLibC();
-    if (options.target.os_tag.? == .windows) {
+    if (options.target.result.os.tag == .windows) {
         mmenu.linkSystemLibrary("user32");
     }
     return mmenu;
 }
 fn addExampleTVedit(b: *Build, options: struct {
     optimize: std.builtin.OptimizeMode,
-    target: std.zig.CrossTarget,
+    target: std.Build.ResolvedTarget,
 }) !*Build.Step.Compile {
     var tvedit = b.addExecutable(.{
         .name = "tvedit",
@@ -191,11 +188,10 @@ fn addExampleTVedit(b: *Build, options: struct {
             "-Wno-c++11-narrowing",
         },
     });
-    tvedit.addIncludePath(.{ .path = "include" });
-    tvedit.addIncludePath(.{ .path = "include/tvision/compat/borland" });
-    tvedit.linkLibC();
+    tvedit.addIncludePath(b.path("include"));
+    tvedit.addIncludePath(b.path("include/tvision/compat/borland"));
 
-    if (options.target.os_tag.? == .windows) {
+    if (options.target.result.os.tag == .windows) {
         tvedit.linkSystemLibrary("user32");
     }
     return tvedit;
@@ -203,7 +199,7 @@ fn addExampleTVedit(b: *Build, options: struct {
 
 fn addExamplePalette(b: *Build, options: struct {
     optimize: std.builtin.OptimizeMode,
-    target: std.zig.CrossTarget,
+    target: std.Build.ResolvedTarget,
 }) !*Build.Step.Compile {
     var palette = b.addExecutable(.{
         .name = "palette",
@@ -220,12 +216,12 @@ fn addExamplePalette(b: *Build, options: struct {
             "-Wno-c++11-narrowing",
         },
     });
-    palette.addIncludePath(.{ .path = "include" });
-    palette.addIncludePath(.{ .path = "include/tvision" });
-    palette.addIncludePath(.{ .path = "include/tvision/compat/borland" });
+    palette.addIncludePath(b.path("include"));
+    palette.addIncludePath(b.path("include/tvision"));
+    palette.addIncludePath(b.path("include/tvision/compat/borland"));
     palette.linkLibC();
 
-    if (options.target.os_tag.? == .windows) {
+    if (options.target.result.os.tag == .windows) {
         palette.linkSystemLibrary("user32");
     }
     return palette;
@@ -233,7 +229,7 @@ fn addExamplePalette(b: *Build, options: struct {
 
 fn addExampleTVdemo(b: *Build, options: struct {
     optimize: std.builtin.OptimizeMode,
-    target: std.zig.CrossTarget,
+    target: std.Build.ResolvedTarget,
 }) !*Build.Step.Compile {
     var tvdemo = b.addExecutable(.{
         .name = "tvdemo",
@@ -241,20 +237,20 @@ fn addExampleTVdemo(b: *Build, options: struct {
         .target = options.target,
     });
 
-    tvdemo.addIncludePath(.{ .path = "include" });
-    tvdemo.addIncludePath(.{ .path = "include/tvision" });
-    tvdemo.addIncludePath(.{ .path = "include/tvision/compat/borland" });
+    tvdemo.addIncludePath(b.path("include"));
+    tvdemo.addIncludePath(b.path("include/tvision"));
+    tvdemo.addIncludePath(b.path("include/tvision/compat/borland"));
     tvdemo.linkLibC();
 
     var sources = std.ArrayList([]const u8).init(b.allocator);
 
-    const source_dir = try std.fs.cwd().openIterableDir("examples/tvdemo", .{});
+    const source_dir = try std.fs.cwd().openDir("examples/tvdemo", .{ .iterate = true });
     var sd_iter = try source_dir.walk(b.allocator);
     defer sd_iter.deinit();
 
     while (try sd_iter.next()) |entry| {
         if (entry.kind == .file and std.mem.endsWith(u8, entry.basename, ".cpp")) {
-            var str = b.fmt("examples/tvdemo/{s}", .{entry.path});
+            const str = b.fmt("examples/tvdemo/{s}", .{entry.path});
             try sources.append(str);
         }
     }
@@ -267,7 +263,7 @@ fn addExampleTVdemo(b: *Build, options: struct {
         },
     });
 
-    if (options.target.os_tag.? == .windows) {
+    if (options.target.result.os.tag == .windows) {
         tvdemo.linkSystemLibrary("user32");
     }
     return tvdemo;
@@ -275,7 +271,7 @@ fn addExampleTVdemo(b: *Build, options: struct {
 
 fn addExampleTVdir(b: *Build, options: struct {
     optimize: std.builtin.OptimizeMode,
-    target: std.zig.CrossTarget,
+    target: std.Build.ResolvedTarget,
 }) !*Build.Step.Compile {
     var tvdir = b.addExecutable(.{
         .name = "tvdir",
@@ -291,12 +287,12 @@ fn addExampleTVdir(b: *Build, options: struct {
             "-Wno-c++11-narrowing",
         },
     });
-    tvdir.addIncludePath(.{ .path = "include" });
-    tvdir.addIncludePath(.{ .path = "include/tvision" });
-    tvdir.addIncludePath(.{ .path = "include/tvision/compat/borland" });
+    tvdir.addIncludePath(b.path("include"));
+    tvdir.addIncludePath(b.path("include/tvision"));
+    tvdir.addIncludePath(b.path("include/tvision/compat/borland"));
     tvdir.linkLibC();
 
-    if (options.target.os_tag.? == .windows) {
+    if (options.target.result.os.tag == .windows) {
         tvdir.linkSystemLibrary("user32");
     }
     return tvdir;
@@ -304,7 +300,7 @@ fn addExampleTVdir(b: *Build, options: struct {
 
 fn addExampleTVforms(b: *Build, options: struct {
     optimize: std.builtin.OptimizeMode,
-    target: std.zig.CrossTarget,
+    target: std.Build.ResolvedTarget,
 }) !*Build.Step.Compile {
     var tvforms = b.addExecutable(.{
         .name = "tvforms",
@@ -314,13 +310,13 @@ fn addExampleTVforms(b: *Build, options: struct {
 
     var sources = std.ArrayList([]const u8).init(b.allocator);
 
-    const source_dir = try std.fs.cwd().openIterableDir("examples/tvforms", .{});
+    const source_dir = try std.fs.cwd().openDir("examples/tvforms", .{ .iterate = true });
     var sd_iter = try source_dir.walk(b.allocator);
     defer sd_iter.deinit();
 
     while (try sd_iter.next()) |entry| {
         if (entry.kind == .file and std.mem.endsWith(u8, entry.basename, ".cpp") and !std.mem.eql(u8, entry.basename, "genform.cpp")) {
-            var str = b.fmt("examples/tvforms/{s}", .{entry.path});
+            const str = b.fmt("examples/tvforms/{s}", .{entry.path});
             try sources.append(str);
         }
     }
@@ -333,12 +329,12 @@ fn addExampleTVforms(b: *Build, options: struct {
         },
     });
 
-    tvforms.addIncludePath(.{ .path = "include" });
-    tvforms.addIncludePath(.{ .path = "include/tvision" });
-    tvforms.addIncludePath(.{ .path = "include/tvision/compat/borland" });
+    tvforms.addIncludePath(b.path("include"));
+    tvforms.addIncludePath(b.path("include/tvision"));
+    tvforms.addIncludePath(b.path("include/tvision/compat/borland"));
     tvforms.linkLibC();
 
-    if (options.target.os_tag.? == .windows) {
+    if (options.target.result.os.tag == .windows) {
         tvforms.linkSystemLibrary("user32");
     }
     return tvforms;
@@ -346,7 +342,7 @@ fn addExampleTVforms(b: *Build, options: struct {
 
 fn addExampleTVhc(b: *Build, options: struct {
     optimize: std.builtin.OptimizeMode,
-    target: std.zig.CrossTarget,
+    target: std.Build.ResolvedTarget,
 }) !*Build.Step.Compile {
     var tvhc = b.addExecutable(.{
         .name = "tvhc",
@@ -364,12 +360,12 @@ fn addExampleTVhc(b: *Build, options: struct {
         },
     });
 
-    tvhc.addIncludePath(.{ .path = "include" });
-    tvhc.addIncludePath(.{ .path = "include/tvision" });
-    tvhc.addIncludePath(.{ .path = "include/tvision/compat/borland" });
+    tvhc.addIncludePath(b.path("include"));
+    tvhc.addIncludePath(b.path("include/tvision"));
+    tvhc.addIncludePath(b.path("include/tvision/compat/borland"));
     tvhc.linkLibC();
 
-    if (options.target.os_tag.? == .windows) {
+    if (options.target.result.os.tag == .windows) {
         tvhc.linkSystemLibrary("user32");
     }
     return tvhc;

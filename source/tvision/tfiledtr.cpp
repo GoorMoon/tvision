@@ -188,7 +188,7 @@ Boolean TFileEditor::saveFile() noexcept
         fnsplit( fileName, drive, dir, file, ext );
         char backupName[MAXPATH];
         fnmerge( backupName, drive, dir, file, backupExt );
-        unlink( backupName );
+        _unlink( backupName );
         rename( fileName, backupName );
         }
 
